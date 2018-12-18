@@ -1,2 +1,2 @@
 # Playerd
-Unofficial playerd repo
+Unofficial Playerd repository, for official visit http://hg.playerd.org/playerd.
