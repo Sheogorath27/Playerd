@@ -1,0 +1,9 @@
+[Unit]
+Description=Playerd Service
+
+[Service]
+ExecStart=/usr/local/bin/playerd --start
+ExecStop=/usr/local/bin/playerd --stop
+
+[Install]
+WantedBy=multi-user.target

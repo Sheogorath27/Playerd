@@ -1,0 +1,16 @@
+# encoding: utf-8
+
+def configure(conf) :
+    return
+
+def build(bld):
+    bld(features     = 'c cshlib',
+        name         = 'playerd',
+        target       = 'playerd',
+        source       = bld.path.ant_glob('*.c'),
+        uselib       = [],
+        includes     = '../include',
+        cflags       = ['-include', 'config.h', '-g'],
+        stlib        = ['bluetooth']
+    )
+

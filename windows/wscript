@@ -1,0 +1,23 @@
+# encoding: utf-8
+
+def configure(conf) :
+    return
+
+def build(bld):
+    bld(features     = 'c cprogram',
+        name         = 'playerd-windows',
+        target       = 'playerd',
+        source       = bld.path.ant_glob('*.c'),
+        uselib       = [],
+        use          = 'playerd',
+    )
+
+    import os
+    bat_inst_cmd = os.path.abspath('.') +'\\windows\\playerd.bat'
+    bat_uninst_cmd = os.path.abspath('.') +'\\windows\\uninstallplayerd.bat'
+    
+    if bld.cmd == 'install':
+        os.system(bat_inst_cmd)
+
+    if bld.cmd == 'uninstall':
+        os.system(bat_uninst_cmd)

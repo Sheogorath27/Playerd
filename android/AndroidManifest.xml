@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="org.copyleftgames.playerd">
+
+    <uses-sdk android:minSdkVersion="9" />
+
+    <application android:label="playerd">
+        <service android:name=".PlayerdService"
+                 android:process=".Playerd">
+        </service>
+    </application>
+</manifest>

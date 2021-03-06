@@ -1,0 +1,90 @@
+# encoding: utf-8
+
+import os
+
+def configure(conf) :
+    arch = ''
+    archs = ['armv6', 'armv7', 'x86']
+
+    conf.env['ANDROID_NDK'] = conf.options.android_ndk
+    conf.env['ANDROID_SDK'] = conf.options.android_sdk
+
+    if conf.options.android_arch in archs :
+        conf.env['ANDROID_ARCH'] = conf.options.android_arch
+        if conf.options.android_arch in ['armv6', 'armv7'] :
+            arch = 'arm'
+        else :
+            arch = conf.options.android_arch
+    else :
+        conf.fatal('%s is not a supported arcitecture. Available arcitectures: %s' %
+                   (conf.options.android_arch, archs))
+    conf.env['ANDROID_LEVEL'] = conf.options.android_level
+
+    import platform
+
+    sysroot = os.path.join(conf.options.android_ndk, 'platforms',
+                           'android-%s' % conf.options.android_level,
+                           'arch-%s' % arch)
+    if conf.options.android_toolchain :
+        sysroot = os.path.join(conf.options.android_toolchain, 'sysroot')
+    conf.env['ANDROID_SYSROOT'] = sysroot
+    system = "%s-%s" % (platform.system().lower(), platform.machine())
+    toolpre = ''
+    if arch == 'arm' :
+        toolpre = 'arm-linux-androideabi'
+    elif arch == 'x86' :
+        toolpre = 'x86'
+    gcc_path = os.path.join(conf.options.android_ndk, 'toolchains',
+                                '%s-4.8' % toolpre, 'prebuilt',
+                                system, 'bin')
+    if conf.options.android_toolchain :
+        gcc_path = os.path.join(conf.options.android_toolchain, 'bin')
+    gcc_name = '%s-gcc' % toolpre
+    if arch == 'x86' :
+        gcc_name = 'i686-linux-android-gcc'
+    conf.find_program(gcc_name, var='CC', path_list=[gcc_path])
+
+    conf.env['CFLAGS'] += ['--sysroot=%s' % conf.env['ANDROID_SYSROOT']]
+    conf.env['INCLUDES'] += [os.path.join(conf.env['ANDROID_SYSROOT'], 'usr',
+                                          'include')]
+
+def build(bld) :
+    if bld.cmd == 'build' :
+        print("Run './waf apk' to create an APK package.")
+    return
+
+def apk(ctx) :
+    import shutil
+    import subprocess
+    import tempfile
+
+    cwd = os.getcwd()
+    print(cwd)
+    tmpdir = tempfile.mkdtemp()
+    playerdlib = os.path.abspath(os.path.join('build', 'src', 'libplayerd.so'))
+    appdir = os.path.join(tmpdir, 'playerd')
+    shutil.copytree('android', appdir)
+    android = os.path.join(ctx.env['ANDROID_SDK'], 'tools', 'android')
+    subprocess.call('%s update project -n playerd -p %s -t android-%s' %
+                    (android, appdir, ctx.env['ANDROID_LEVEL']),
+                    shell=True)
+    libarch = ''
+    if ctx.env['ANDROID_ARCH'] == 'armv6' :
+        libarch = 'armeabi'
+    elif ctx.env['ANDROID_ARCH'] == 'armv7' :
+        libarch = 'armeabi-v7a'
+    else :
+        libarch = ctx.env['ANDROID_ARCH']
+
+    libdir = os.path.join(appdir, 'libs', libarch)
+    os.makedirs(libdir)
+    shutil.copy2(playerdlib, libdir)
+    os.chdir(appdir)
+    subprocess.call(['ant', 'debug'])
+    os.chdir(cwd)
+    builddir = os.path.join('build', 'android')
+    if not os.path.exists(builddir) :
+        os.makedirs(builddir)
+    shutil.copy2(os.path.join(appdir, 'bin', 'playerd-debug.apk'), builddir)
+    shutil.rmtree(tmpdir)
+    return

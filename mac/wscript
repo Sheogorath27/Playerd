@@ -1,0 +1,18 @@
+# encoding: utf-8
+
+def configure(conf):
+	return
+	
+def build(bld):
+	bld(features 	= 'c cprogram',
+		name		= 'playerd-mac',
+		target		= 'playerd',
+		source 		= bld.path.ant_glob('*.c'),
+		uselib		= [],
+		use			= 'playerd',
+	)
+	from os.path import expanduser
+	
+	bld.install_as('/usr/local/bin/playerd.service', 'playerd.service', chmod=711)
+	bld.install_as(expanduser('~') + '/Library/LaunchAgents/local.playerd.service.plist',
+							 'local.playerd.service.plist')

@@ -1,0 +1,17 @@
+# encoding: utf-8
+
+def configure(conf) :
+    return
+
+def build(bld):
+    bld(features     = 'c cprogram',
+        name         = 'playerd-systemd',
+        target       = 'playerd',
+        source       = bld.path.ant_glob('*.c'),
+        uselib       = [],
+        use          = 'playerd',
+        includes     = '../include',
+        cflags       = ['-include', 'config.h', '-g']
+    )
+    bld.install_as('/usr/lib/systemd/system/playerd.service', 'playerd.service')
+

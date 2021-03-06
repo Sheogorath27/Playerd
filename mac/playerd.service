@@ -1,0 +1,3 @@
+#! /bin/bash
+echo started > ~/Documents/Playerd/p.log
+/usr/local/bin/playerd `echo ~/playerd.log`

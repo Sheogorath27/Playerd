@@ -1,0 +1,67 @@
+playerd design docs
+===================
+
+Overall
+-------
+
+In every deployment there will be 2 or 3 components;
+    * Client (usually a game) wanting to use playerd
+    * Service (usually boot level) managing players and devices
+    * Desktop service component for management
+    
+On some operating systems the latter two may be the same. In others, such on
+BSD/Linux based systems, the latter should run integrated with the desktop
+environment where the core service runs as a boot-level process.
+
+Each component runs in a separate process and needs to communicate through a
+system-specific IPC API. For example, on Linux we use DBus (which we also use
+to manage Bluetooth devices on Linux).
+
+The IPC mechanism should not be exposed to playerd's public API or affect the
+way clients are written as this would only hurt game portability. All system
+services related to game controllers or input should be handled by playerd.
+
+The code in src/ will be compiled to a shared library which gets used by all
+of these components. The API will expose all functionality through private
+struct pointers and functions. This is intended to make wrapping in other
+languages (C++, Python, Vala) as simple as possible and without creating
+future ABI incompatabilities.
+
+We use reference counting to ensure objects are not freed while still being
+used by a client. If a device is removed, the memory allocated to hold its data
+should remain until its disconnection event has been processed.
+
+
+Low Level
+---------
+
+Due to the standardization of USB HID, and its adoption for Bluetooth HID, we
+already have a common API to represent most input events.  Especially for
+existing games looking to adopt playerd, maintaining a low level event API
+based on USB HID is critical.
+
+
+High Level
+----------
+
+The big problem game developers face with low level event support is its very
+device specific - while an XBox controller may work very similar to a Sony
+controller with some button remapping, a Playstation Move or Wiimote needs to
+be supported in a very different way - which every game needs a fairly large
+body of code for if they wish to support these.
+
+However, by large, game input can be abstracted and distilled to a set of
+predefined actions a combination of lower level events are expressed to take.
+You look, you move, you jump, you select a point on the screen. If we implement
+the code each game would use to express these, with configuration to let game
+designers fine tune them, we can allow a game to be written against a single
+API for all present and future game controllers.
+
+Complex input, such as video streamed from a webcam and processed by a
+computer vision library to discern the location of a Playstation Move
+controller relative to the screen, can be similarly distilled to these basic
+actions without the need for a game to include device-specific code.
+
+Players may then configure once for all games - eg, inverting the Y axis on
+Look actions, or whether to use WASD or cursor keys on a keyboard.
+
